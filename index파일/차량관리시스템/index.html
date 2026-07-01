@@ -844,10 +844,17 @@ function expandDates(s, e) {
 function effectiveStatus(p) {
   const st = p.status || '신청중';
   if (st !== '확정' && st !== '승인됨') return st;
-  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
   const s = p.start || '', e = p.end || s;
-  if (s <= today && today <= e) return '사용중';
-  return st;
+  if (today < s || today > e) return st;
+  const tp = (p.time || '').split('~').map(x => x.trim());
+  const tStart = tp[0] || '00:00';
+  const tEnd = tp[1] || tp[0] || '23:59';
+  const curTime = now.toTimeString().slice(0, 5);
+  if (today === s && curTime < tStart) return st;
+  if (today === e && curTime > tEnd) return st;
+  return '사용중';
 }
 
 function renderCal() {
